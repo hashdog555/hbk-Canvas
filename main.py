@@ -35,6 +35,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response, StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
+from local_account import account_user_id, register_account_routes
 
 QUIET_ACCESS_PATHS = {
     "/api/queue_status",
@@ -1253,6 +1254,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(WORKFLOW_DIR, exist_ok=True)
 os.makedirs(CONVERSATION_DIR, exist_ok=True)
 os.makedirs(CANVAS_DIR, exist_ok=True)
+register_account_routes(app, DATA_DIR)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/output", StaticFiles(directory=OUTPUT_DIR), name="output")
@@ -2688,6 +2690,9 @@ def get_comfy_history(comfy_address, prompt_id):
         return {}
 
 def safe_user_id(user_id, request: Request):
+    account_id = account_user_id(request)
+    if account_id:
+        return account_id
     candidate = (user_id or "").strip()
     if not candidate and request.client:
         candidate = f"ip-{request.client.host}"
